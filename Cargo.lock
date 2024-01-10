@@ -5861,6 +5861,7 @@ dependencies = [
  "anyhow",
  "home",
  "lazy_static",
+ "runner_macro",
  "starknet",
  "tokio",
  "url",
