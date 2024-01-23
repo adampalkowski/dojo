@@ -5865,6 +5865,7 @@ dependencies = [
  "chrono",
  "clap",
  "dojo-lang",
+ "dojo-world",
  "home",
  "katana-core",
  "katana-primitives",
