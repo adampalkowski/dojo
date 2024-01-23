@@ -8,5 +8,7 @@ dojo.iml
 .DS_Store
 .env
 data
-crates/benches/gas_usage.txt
 **/katana-logs
+
+crates/benches/gas_usage.txt
+crates/benches/bench_results.txt
