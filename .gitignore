@@ -12,3 +12,5 @@ data
 
 crates/benches/gas_usage.txt
 crates/benches/bench_results.txt
+output.txt
+
