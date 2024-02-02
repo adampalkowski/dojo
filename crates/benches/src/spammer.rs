@@ -20,7 +20,7 @@ async fn spam_no_stats(
     wait_time: Duration,
 ) -> FieldElement {
     let max_fee = FieldElement::from_hex_be(ENOUGH_GAS).unwrap();
-    let mut nonce = FieldElement::ONE;
+    let mut nonce = FieldElement::ZERO;
 
     for call in parse_calls(calldata, contract_address) {
         let transactions = accounts
@@ -52,7 +52,7 @@ pub async fn spam_katana(
 
     // generating all needed accounts
     let accounts = runner.accounts();
-    let wait_time = Duration::from_millis(accounts.len() as u64 * 60 + 3000 + additional_sleep);
+    let wait_time = Duration::from_millis(accounts.len() as u64 * 500 + 3000 + additional_sleep);
     let name = format!(
         "Benchmark: {} accounts, {} transactions, {} calls",
         accounts.len(),
@@ -116,7 +116,10 @@ pub async fn spam_katana(
     // time difference between first and last transaction
     let block_times = runner.block_times().await;
     let block_sizes = runner.block_sizes().await;
-    let responses_span = (*times.last().unwrap() - *times.first().unwrap()).as_millis() as u64;
+    let responses_span = match (times.last(), times.first()) {
+        (Some(last), Some(first)) => (*last - *first).as_millis().try_into().unwrap(),
+        _ => 0,
+    };
 
     let mut steps = runner.steps().await;
     steps.drain(0..steps_before.len());
