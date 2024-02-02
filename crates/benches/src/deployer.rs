@@ -5,13 +5,11 @@ use anyhow::{anyhow, bail, Context, Ok, Result};
 use clap::Parser;
 use dojo_lang::compiler::DojoCompiler;
 use dojo_lang::plugin::CairoPluginRepository;
-use dojo_lang::scarb_internal::compile_workspace;
 use dojo_world::manifest::Manifest;
 use futures::executor::block_on;
 use katana_runner::KatanaRunner;
 use scarb::compiler::CompilerRepository;
-use scarb::core::{Config, TargetKind};
-use scarb::ops::CompileOpts;
+use scarb::core::Config;
 use sozo::args::{Commands, SozoArgs};
 use sozo::ops::migration;
 use starknet::core::types::FieldElement;
@@ -108,14 +106,16 @@ async fn prepare_migration_args(args: SozoArgs) -> Result<FieldElement> {
     let target_dir = target_dir.join(ws.config().profile().as_str());
 
     if !target_dir.join("manifest.json").exists() {
-        compile_workspace(
-            &config,
-            CompileOpts { include_targets: vec![], exclude_targets: vec![TargetKind::TEST] },
-        )?;
+        // compilation not working for a current main of sozo
+        bail!("contract not compiled");
+        // compile_workspace(
+        //     &config,
+        //     CompileOpts { include_targets: vec![], exclude_targets: vec![TargetKind::TEST] },
+        // )?;
     }
     let manifest = Manifest::load_from_path(target_dir.join("manifest.json"))
-        .expect("failed to load manifest");
+        .context("failed to load manifest")?;
 
-    migration::execute(&ws, migrate, target_dir).await?;
-    Ok(manifest.contracts[0].address.unwrap())
+    migration::execute(&ws, migrate, target_dir).await.context("migration failed")?;
+    Ok(manifest.contracts[0].address.context("contact address not found")?)
 }
