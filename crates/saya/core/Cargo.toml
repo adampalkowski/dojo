@@ -12,6 +12,7 @@ katana-executor.workspace = true
 katana-primitives.workspace = true
 katana-provider.workspace = true
 katana-rpc-types.workspace = true
+katana-runner.workspace = true
 saya-provider.workspace = true
 
 anyhow.workspace = true

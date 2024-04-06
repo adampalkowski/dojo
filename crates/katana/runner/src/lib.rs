@@ -43,6 +43,7 @@ impl KatanaRunner {
             format!("logs/katana-{}.log", name),
             2,
             false,
+            0,
         )
     }
 
@@ -58,6 +59,7 @@ impl KatanaRunner {
             format!("katana-logs/{}.log", name),
             n_accounts,
             with_blocks,
+            0,
         )
     }
 
@@ -68,6 +70,18 @@ impl KatanaRunner {
             format!("katana-logs/{}.log", port),
             2,
             false,
+            0,
+        )
+    }
+
+    pub fn new_with_seed(program: &str, seed: u8) -> Result<Self> {
+        Self::new_with_port_and_filename(
+            program,
+            find_free_port(),
+            format!("katana-logs/{}.log", (seed + ('0' as u8)) as char),
+            2,
+            false,
+            0 + seed,
         )
     }
 
@@ -77,13 +91,15 @@ impl KatanaRunner {
         log_filename: String,
         n_accounts: u16,
         with_blocks: bool,
+        seed_offset: u8,
     ) -> Result<Self> {
         let mut command = Command::new(program);
         command
             .args(["-p", &port.to_string()])
             .args(["--json-log"])
             .args(["--max-connections", &format!("{}", 10000)])
-            .args(["--accounts", &format!("{}", n_accounts)]);
+            .args(["--accounts", &format!("{}", n_accounts)])
+            .args(["--seed", &format!("{}", ('0' as u8 + seed_offset) as char)]);
 
         if with_blocks {
             command.args(["--block-time", &format!("{}", BLOCK_TIME_IF_ENABLED)]);
@@ -110,7 +126,7 @@ impl KatanaRunner {
         let provider = JsonRpcClient::new(HttpTransport::new(url));
 
         let mut seed = [0; 32];
-        seed[0] = 48;
+        seed[0] = '0' as u8 + seed_offset;
         let accounts = DevAllocationsGenerator::new(n_accounts)
             .with_seed(seed)
             .generate()
@@ -134,7 +150,7 @@ impl KatanaRunner {
         JsonRpcClient::new(HttpTransport::new(url))
     }
 
-    // A constract needs to be deployed only once for each instance
+    // A contract needs to be deployed only once for each instance.
     // In proptest runner is static but deployment would happen for each test, unless it is
     // persisted here.
     pub async fn set_contract(&self, contract_address: FieldElement) {

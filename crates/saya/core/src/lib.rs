@@ -9,6 +9,8 @@ use prover::ProverIdentifier;
 use saya_provider::rpc::JsonRpcProvider;
 use saya_provider::Provider as SayaProvider;
 use serde::{Deserialize, Serialize};
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use tracing::{error, info, trace};
 use url::Url;
 use verifier::VerifierIdentifier;
@@ -18,6 +20,7 @@ use crate::data_availability::{DataAvailabilityClient, DataAvailabilityConfig};
 use crate::error::SayaResult;
 use crate::prover::state_diff::ProvedStateDiff;
 
+pub mod block_tree;
 pub mod blockchain;
 pub mod data_availability;
 pub mod error;
@@ -180,6 +183,17 @@ impl Saya {
         trace!(target: "saya_core", "Proving block {block_number}.");
         let proof = prover::prove(to_prove.serialize(), self.config.prover).await?;
         info!(target: "saya_core", block_number, "Block proven.");
+
+        File::create(format!(
+            "proof_{}_{}.json",
+            self.config.katana_rpc.port().unwrap(),
+            block_number
+        ))
+        .await
+        .unwrap()
+        .write_all(&proof.as_bytes())
+        .await
+        .unwrap();
 
         trace!(target: "saya_core", "Verifying block {block_number}.");
         let transaction_hash = verifier::verify(proof, self.config.verifier).await?;

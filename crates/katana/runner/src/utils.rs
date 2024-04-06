@@ -19,12 +19,15 @@ pub fn wait_for_server_started_and_signal(path: &Path, stdout: ChildStdout, send
     }
     let mut log_writer = File::create(path).expect("failed to create log file");
 
+    let mut first = true;
+
     for line in reader.lines() {
         let line = line.expect("failed to read line from subprocess stdout");
         writeln!(log_writer, "{}", line).expect("failed to write to log file");
 
-        if line.contains(r#""target":"katana""#) {
+        if first && line.contains(r#""target":"katana"#) {
             sender.send(()).expect("failed to send start signal");
+            first = false;
         }
     }
 }
